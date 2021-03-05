@@ -34,10 +34,10 @@ func main() {
 	router.HandleFunc("/questions/{id}", GetQuestion).Methods("GET")
 	router.HandleFunc("/questions/{id}", UpdateQuestion).Methods("PUT")
 
-	server := &http.Server {
-		Addr: "127.0.0.1:" + getPort(),
-		Handler: router,
-		ReadTimeout: 1 * time.Second,
+	server := &http.Server{
+		Addr:         "127.0.0.1:" + getPort(),
+		Handler:      router,
+		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
 	log.Fatal(server.ListenAndServe())
