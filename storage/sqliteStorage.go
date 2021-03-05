@@ -73,11 +73,25 @@ func (s *SqliteStorage) getOptions(questionID int) (options []models.Option) {
 	return
 }
 
-func (s *SqliteStorage) List() (questions []models.Question) {
-	rows, err := s.DB.Query(`SELECT * FROM questions`)
-	if err != nil {
-		log.Fatal(err)
+func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
+	var rows *sql.Rows
+	var err error
+	if (lastID != 0) && (limit != 0) {
+		rows, err = s.DB.Query(
+			`SELECT * FROM questions WHERE id < (?) ORDER BY ID DESC LIMIT (?)`,
+			lastID,
+			limit,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		rows, err = s.DB.Query(`SELECT * FROM questions`)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {

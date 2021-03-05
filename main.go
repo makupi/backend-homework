@@ -49,7 +49,9 @@ func parseIDFromRequest(w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
-	questions := a.Storage.List()
+	lastID, _ := strconv.Atoi(r.URL.Query().Get("last_id"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	questions := a.Storage.List(lastID, limit)
 	addJSONPayload(w, http.StatusOK, questions)
 }
 
