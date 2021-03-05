@@ -9,4 +9,5 @@ type Storage interface {
 	Add(question models.Question) (models.Question, error)
 	Get(id int) (models.Question, error)
 	Update(id int, question models.Question) (models.Question, error)
+	Delete(id int) error
 }

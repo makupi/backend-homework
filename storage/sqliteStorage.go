@@ -12,7 +12,7 @@ type SqliteStorage struct {
 }
 
 func NewSqliteStorage() *SqliteStorage {
-	db, err := sql.Open("sqlite3", "./db.sqlite3")
+	db, err := sql.Open("sqlite3", "./db.sqlite3?_foreign_keys=on")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -170,4 +170,9 @@ func (s *SqliteStorage) Update(id int, question models.Question) (models.Questio
 		}
 	}
 	return s.Get(id)
+}
+
+func (s *SqliteStorage) Delete(id int) error {
+	_, err := s.DB.Exec(`DELETE FROM questions WHERE ID == (?)`, id)
+	return err
 }
