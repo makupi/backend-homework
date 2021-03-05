@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/makupi/backend-homework/middlewares"
 	"github.com/makupi/backend-homework/models"
 	"github.com/makupi/backend-homework/storage"
 	"log"
@@ -87,6 +88,7 @@ func main() {
 	app := App{}
 	app.Initialize()
 	router := mux.NewRouter()
+	router.Use(middlewares.LoggingMiddleware)
 	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
