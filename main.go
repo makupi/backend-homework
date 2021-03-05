@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/makupi/backend-homework/models"
 	"github.com/makupi/backend-homework/storage"
 	"log"
 	"net/http"
@@ -61,6 +62,19 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("PUT /questions/" + id)
 }
 
+func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
+	var question models.Question
+	err := json.NewDecoder(r.Body).Decode(&question)
+	if err != nil {
+		log.Fatal(err)
+	}
+	question, err = a.Storage.Add(question)
+	if err != nil {
+		log.Fatal(err)
+	}
+	addJSONPayload(w, http.StatusOK, question)
+}
+
 func main() {
 	app := App{}
 	app.Initialize()
@@ -68,6 +82,7 @@ func main() {
 	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
+	router.HandleFunc("/questions", app.NewQuestion).Methods("POST")
 
 	server := &http.Server{
 		Addr:         "127.0.0.1:" + getPort(),

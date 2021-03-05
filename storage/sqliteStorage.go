@@ -92,9 +92,33 @@ func (s *SqliteStorage) List() (questions []models.Question) {
 	return
 }
 
+func (s *SqliteStorage) addOptions(options []models.Option, questionID int) error {
+	for _, option := range options {
+		_, err := s.DB.Exec(
+			`INSERT INTO options (QUESTION_ID, OPTION, CORRECT) values (?,?,?)`,
+			questionID,
+			option.Body,
+			option.Correct,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *SqliteStorage) Add(question models.Question) (models.Question, error) {
 	var q models.Question
-	return q, errors.New("not implemented")
+	result, err := s.DB.Exec(`INSERT INTO questions (question) values (?)`, question.Body)
+	if err != nil {
+		return q, nil
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return q, nil
+	}
+	err = s.addOptions(question.Options, int(id))
+	return s.Get(int(id))
 }
 
 func (s *SqliteStorage) Get(id int) (models.Question, error) {
