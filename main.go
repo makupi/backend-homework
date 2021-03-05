@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/makupi/backend-homework/models"
 	"github.com/makupi/backend-homework/storage"
@@ -58,8 +57,17 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	fmt.Println("PUT /questions/" + id)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Fatal(err)
+	}
+	var question models.Question
+	err = json.NewDecoder(r.Body).Decode(&question)
+	if err != nil {
+		log.Fatal(err)
+	}
+	question, err = a.Storage.Update(id, question)
+	addJSONPayload(w, http.StatusOK, question)
 }
 
 func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {

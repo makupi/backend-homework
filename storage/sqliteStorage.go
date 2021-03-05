@@ -2,7 +2,6 @@ package storage
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/makupi/backend-homework/models"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -132,7 +131,43 @@ func (s *SqliteStorage) Get(id int) (models.Question, error) {
 	return question, nil
 }
 
+func (s *SqliteStorage) updateQuestion(id int, question models.Question) error {
+	_, err := s.DB.Exec(`UPDATE questions SET question = (?) WHERE ID == (?)`, question.Body, id)
+	return err
+}
+
+func (s *SqliteStorage) updateOption(option models.Option) error {
+	_, err := s.DB.Exec(
+		`UPDATE options SET OPTION = (?), CORRECT = (?) WHERE ID == (?)`,
+		option.Body,
+		option.Correct,
+		option.ID,
+	)
+	return err
+}
+
 func (s *SqliteStorage) Update(id int, question models.Question) (models.Question, error) {
-	var q models.Question
-	return q, errors.New("not implemented")
+	currentQ, err := s.Get(id)
+	if err != nil {
+		return models.Question{}, err
+	}
+	if currentQ.Body != question.Body {
+		err = s.updateQuestion(id, question)
+		if err != nil {
+			return models.Question{}, err
+		}
+	}
+	for _, option := range question.Options {
+		for _, currentOption := range currentQ.Options {
+			if option.ID == currentOption.ID {
+				if (option.Body != currentOption.Body) || (option.Correct != currentOption.Correct) {
+					err = s.updateOption(option)
+					if err != nil {
+						return models.Question{}, err
+					}
+				}
+			}
+		}
+	}
+	return s.Get(id)
 }
