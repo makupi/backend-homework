@@ -1,4 +1,4 @@
-module github.com/togglhire/backend-homework
+module github.com/makupi/backend-homework
 
 go 1.15
 

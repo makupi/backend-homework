@@ -2,8 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"github.com/makupi/backend-homework/models"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/togglhire/backend-homework/models"
 	"log"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/togglhire/backend-homework/storage"
+	"github.com/makupi/backend-homework/storage"
 	"log"
 	"net/http"
 	"os"

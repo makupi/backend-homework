@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/togglhire/backend-homework/models"
+	"github.com/makupi/backend-homework/models"
 )
 
 type Storage interface {
