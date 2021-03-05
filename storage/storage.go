@@ -1,10 +1,12 @@
 package storage
 
-import "github.com/togglhire/backend-homework"
+import (
+	"github.com/togglhire/backend-homework/models"
+)
 
 type Storage interface {
-	List() []main.Question
-	Add(question main.Question) (main.Question, error)
-	Get(id int) (main.Question, error)
-	Update(id int, question main.Question) (main.Question, error)
+	List() []models.Question
+	Add(question models.Question) (models.Question, error)
+	Get(id int) (models.Question, error)
+	Update(id int, question models.Question) (models.Question, error)
 }

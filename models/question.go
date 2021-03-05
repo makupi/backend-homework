@@ -1,4 +1,4 @@
-package main
+package models
 
 type Question struct {
 	Body    string   `json:"body"`
