@@ -47,11 +47,13 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	question, err := a.Storage.Get(id)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 	addJSONPayload(w, http.StatusOK, question)
 }
@@ -60,14 +62,20 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	var question models.Question
 	err = json.NewDecoder(r.Body).Decode(&question)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	question, err = a.Storage.Update(id, question)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	addJSONPayload(w, http.StatusOK, question)
 }
 
@@ -75,11 +83,13 @@ func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 	var question models.Question
 	err := json.NewDecoder(r.Body).Decode(&question)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	question, err = a.Storage.Add(question)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	addJSONPayload(w, http.StatusOK, question)
 }
