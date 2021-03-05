@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/togglhire/backend-homework/storage"
 	"log"
 	"net/http"
 	"os"
@@ -16,23 +18,37 @@ func getPort() string {
 	return "3000"
 }
 
-func ListQuestions(w http.ResponseWriter, r *http.Request) {
+type App struct {
+	Storage storage.Storage
+}
+
+func (a *App) Initialize() {
+	a.Storage = storage.NewSqliteStorage()
+}
+
+func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetQuestion(w http.ResponseWriter, r *http.Request) {
-
+func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	fmt.Println("GET /questions/" + id)
 }
 
-func UpdateQuestion(w http.ResponseWriter, r *http.Request) {
-
+func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	fmt.Println("PUT /questions/" + id)
 }
 
 func main() {
+	app := App{}
+	app.Initialize()
 	router := mux.NewRouter()
-	router.HandleFunc("/questions", ListQuestions).Methods("GET")
-	router.HandleFunc("/questions/{id}", GetQuestion).Methods("GET")
-	router.HandleFunc("/questions/{id}", UpdateQuestion).Methods("PUT")
+	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
+	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
+	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
 
 	server := &http.Server{
 		Addr:         "127.0.0.1:" + getPort(),
