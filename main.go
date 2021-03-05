@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/makupi/backend-homework/storage"
@@ -26,8 +27,19 @@ func (a *App) Initialize() {
 	a.Storage = storage.NewSqliteStorage()
 }
 
-func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
+func addJSONPayload(w http.ResponseWriter, statusCode int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(statusCode)
+	err := json.NewEncoder(w).Encode(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
+func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
+	questions := a.Storage.List()
+	addJSONPayload(w, http.StatusOK, questions)
+	fmt.Println(questions)
 }
 
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
