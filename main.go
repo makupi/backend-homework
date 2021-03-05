@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -39,13 +40,19 @@ func addJSONPayload(w http.ResponseWriter, statusCode int, payload interface{}) 
 func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	questions := a.Storage.List()
 	addJSONPayload(w, http.StatusOK, questions)
-	fmt.Println(questions)
 }
 
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-	fmt.Println("GET /questions/" + id)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Fatal(err)
+	}
+	question, err := a.Storage.Get(id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	addJSONPayload(w, http.StatusOK, question)
 }
 
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {

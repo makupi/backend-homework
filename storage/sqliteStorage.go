@@ -80,7 +80,7 @@ func (s *SqliteStorage) List() (questions []models.Question) {
 		log.Fatal(err)
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var question models.Question
 		if err := rows.Scan(&question.ID, &question.Body); err != nil {
@@ -98,8 +98,14 @@ func (s *SqliteStorage) Add(question models.Question) (models.Question, error) {
 }
 
 func (s *SqliteStorage) Get(id int) (models.Question, error) {
-	var q models.Question
-	return q, errors.New("not implemented")
+	row := s.DB.QueryRow(`SELECT * FROM questions WHERE ID == (?)`, id)
+	var question models.Question
+	err := row.Scan(&question.ID, &question.Body)
+	if err != nil {
+		return question, err
+	}
+	question.Options = s.getOptions(question.ID)
+	return question, nil
 }
 
 func (s *SqliteStorage) Update(id int, question models.Question) (models.Question, error) {
