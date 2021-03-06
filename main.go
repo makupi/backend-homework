@@ -122,18 +122,33 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (a *App) CreateToken(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func main() {
 	app := App{}
 	app.Initialize()
 	jwtMiddleware := middlewares.JWTMiddleware{Secret: app.JWTSecret, Storage: app.Storage}
 	router := mux.NewRouter()
-	router.Use(jwtMiddleware.Middleware)
+	//router.Use(jwtMiddleware.Middleware)
 	router.Use(middlewares.LoggingMiddleware)
-	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
-	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
-	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
-	router.HandleFunc("/questions", app.NewQuestion).Methods("POST")
-	router.HandleFunc("/questions/{id}", app.DeleteQuestion).Methods("DELETE")
+
+	questions := router.PathPrefix("/questions").Subrouter()
+	questions.Use(jwtMiddleware.Middleware)
+	questions.HandleFunc("", app.ListQuestions).Methods("GET")
+	questions.HandleFunc("", app.NewQuestion).Methods("POST")
+	questions.HandleFunc("/{id}", app.GetQuestion).Methods("GET")
+	questions.HandleFunc("/{id}", app.UpdateQuestion).Methods("PUT")
+	questions.HandleFunc("/{id}", app.DeleteQuestion).Methods("DELETE")
+
+	users := router.PathPrefix("/users").Subrouter()
+	users.HandleFunc("", app.CreateUser).Methods("POST")
+	users.HandleFunc("/token", app.CreateToken).Methods("POST")
 
 	server := &http.Server{
 		Addr:         "127.0.0.1:" + getEnv("PORT", "3000"),
