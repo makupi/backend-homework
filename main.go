@@ -120,6 +120,7 @@ func main() {
 	app.Initialize()
 	router := mux.NewRouter()
 	router.Use(middlewares.LoggingMiddleware)
+	router.Use(middlewares.JWTMiddleware)
 	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
