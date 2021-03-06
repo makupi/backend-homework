@@ -7,6 +7,7 @@ import (
 	"github.com/makupi/backend-homework/storage"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -24,10 +25,13 @@ func (j *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 		})
 		if err == nil && token.Valid {
 			userID := (*token).Claims.(jwt.MapClaims)["userID"]
-			if userID != nil && j.Storage.UserIDExists(fmt.Sprintf("%v", userID)) {
-				ctx := context.WithValue(r.Context(), "userID", userID)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
+			if userID != nil {
+				userID, err := strconv.Atoi(fmt.Sprintf("%v", userID))
+				if err == nil && j.Storage.UserIDExists(userID) {
+					ctx := context.WithValue(r.Context(), "userID", userID)
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
 			}
 		}
 		log.Print("Unauthorized access to " + r.Method + " " + r.RequestURI)

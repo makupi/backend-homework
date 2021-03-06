@@ -191,6 +191,6 @@ func (s *SqliteStorage) Delete(id int) error {
 	return err
 }
 
-func (s *SqliteStorage) UserIDExists(userID string) bool {
+func (s *SqliteStorage) UserIDExists(userID int) bool {
 	return true
 }

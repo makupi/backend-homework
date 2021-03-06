@@ -10,5 +10,5 @@ type Storage interface {
 	Get(id int) (models.Question, error)
 	Update(id int, question models.Question) (models.Question, error)
 	Delete(id int) error
-	UserIDExists(userID string) bool
+	UserIDExists(userID int) bool
 }
