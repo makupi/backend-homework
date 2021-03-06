@@ -1,5 +1,11 @@
 # Notes
 
+## Questions Payload
+
+I decided to introduce an ID for both questions and each option to identify them within the database.    
+On `PUT /questions{id}` the ID of each option **must** be included otherwise it won't be updated. The question ID may be
+omitted as it is taken from the request URI.
+
 ## User Authentication
 
 While implementing the JWT authentication bonus requirement I also went ahead and added a simple user and token creation
@@ -22,6 +28,10 @@ Both endpoints accept the following payload:
 All `/questions` endpoints require a valid JWT token with the payload `"userID": 123`    
 The secret for JWT can be set through the environment variable `JWT_SECRET` or it will default to `development-secret`
 
+## Heroku
+
+Decided to also deploy this to heroku: https://makupi-backend-homework.herokuapp.com     
+Downside of SQLite on heroku is that data is not persistent when a new version is deployed.
 
 ----
 
