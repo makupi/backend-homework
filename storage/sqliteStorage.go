@@ -190,3 +190,7 @@ func (s *SqliteStorage) Delete(id int) error {
 	_, err := s.DB.Exec(`DELETE FROM questions WHERE ID == (?)`, id)
 	return err
 }
+
+func (s *SqliteStorage) UserIDExists(userID int) bool {
+	return true
+}
