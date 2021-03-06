@@ -83,12 +83,13 @@ func (s *SqliteStorage) getOptions(questionID int) (options []models.Option) {
 	return
 }
 
-func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
+func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Question) {
 	var rows *sql.Rows
 	var err error
 	if (lastID != 0) && (limit != 0) {
 		rows, err = s.DB.Query(
-			`SELECT * FROM questions WHERE id < (?) ORDER BY id DESC LIMIT (?)`,
+			`SELECT * FROM questions WHERE user_id == (?) AND id < (?) ORDER BY id DESC LIMIT (?)`,
+			userID,
 			lastID,
 			limit,
 		)
@@ -96,7 +97,7 @@ func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
 			log.Print(err)
 		}
 	} else {
-		rows, err = s.DB.Query(`SELECT * FROM questions`)
+		rows, err = s.DB.Query(`SELECT * FROM questions WHERE user_id == (?)`, userID)
 		if err != nil {
 			log.Print(err)
 		}
@@ -130,9 +131,9 @@ func (s *SqliteStorage) addOptions(options []models.Option, questionID int) erro
 	return nil
 }
 
-func (s *SqliteStorage) Add(question models.Question) (models.Question, error) {
+func (s *SqliteStorage) Add(userID int, question models.Question) (models.Question, error) {
 	var q models.Question
-	result, err := s.DB.Exec(`INSERT INTO questions (question) values (?)`, question.Body)
+	result, err := s.DB.Exec(`INSERT INTO questions (question, user_id) values (?, ?)`, question.Body, userID)
 	if err != nil {
 		return q, nil
 	}
@@ -141,11 +142,11 @@ func (s *SqliteStorage) Add(question models.Question) (models.Question, error) {
 		return q, nil
 	}
 	err = s.addOptions(question.Options, int(id))
-	return s.Get(int(id))
+	return s.Get(int(id), userID)
 }
 
-func (s *SqliteStorage) Get(id int) (models.Question, error) {
-	row := s.DB.QueryRow(`SELECT * FROM questions WHERE id == (?)`, id)
+func (s *SqliteStorage) Get(id, userID int) (models.Question, error) {
+	row := s.DB.QueryRow(`SELECT * FROM questions WHERE id == (?) AND user_id == (?)`, id, userID)
 	var question models.Question
 	err := row.Scan(&question.ID, &question.Body)
 	if err != nil {
@@ -155,8 +156,8 @@ func (s *SqliteStorage) Get(id int) (models.Question, error) {
 	return question, nil
 }
 
-func (s *SqliteStorage) updateQuestion(id int, question models.Question) error {
-	_, err := s.DB.Exec(`UPDATE questions SET question = (?) WHERE id == (?)`, question.Body, id)
+func (s *SqliteStorage) updateQuestion(id, userID int, question models.Question) error {
+	_, err := s.DB.Exec(`UPDATE questions SET question = (?) WHERE id == (?) AND user_id == (?)`, question.Body, id, userID)
 	return err
 }
 
@@ -170,13 +171,13 @@ func (s *SqliteStorage) updateOption(option models.Option) error {
 	return err
 }
 
-func (s *SqliteStorage) Update(id int, question models.Question) (models.Question, error) {
-	currentQ, err := s.Get(id)
+func (s *SqliteStorage) Update(id, userID int, question models.Question) (models.Question, error) {
+	currentQ, err := s.Get(id, userID)
 	if err != nil {
 		return models.Question{}, err
 	}
 	if currentQ.Body != question.Body {
-		err = s.updateQuestion(id, question)
+		err = s.updateQuestion(id, userID, question)
 		if err != nil {
 			return models.Question{}, err
 		}
@@ -193,11 +194,11 @@ func (s *SqliteStorage) Update(id int, question models.Question) (models.Questio
 			}
 		}
 	}
-	return s.Get(id)
+	return s.Get(id, userID)
 }
 
-func (s *SqliteStorage) Delete(id int) error {
-	_, err := s.DB.Exec(`DELETE FROM questions WHERE id == (?)`, id)
+func (s *SqliteStorage) Delete(id, userID int) error {
+	_, err := s.DB.Exec(`DELETE FROM questions WHERE id == (?) AND user_id == (?)`, id, userID)
 	return err
 }
 

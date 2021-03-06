@@ -51,18 +51,20 @@ func parseIDFromRequest(w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
 	lastID, _ := strconv.Atoi(r.URL.Query().Get("last_id"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	questions := a.Storage.List(lastID, limit)
+	questions := a.Storage.List(userID, lastID, limit)
 	addJSONPayload(w, http.StatusOK, questions)
 }
 
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
 	id, err := parseIDFromRequest(w, r)
 	if err != nil {
 		return
 	}
-	question, err := a.Storage.Get(id)
+	question, err := a.Storage.Get(id, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -71,6 +73,7 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
 	id, err := parseIDFromRequest(w, r)
 	if err != nil {
 		return
@@ -81,7 +84,7 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	question, err = a.Storage.Update(id, question)
+	question, err = a.Storage.Update(id, userID, question)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -90,13 +93,14 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
 	var question models.Question
 	err := json.NewDecoder(r.Body).Decode(&question)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	question, err = a.Storage.Add(question)
+	question, err = a.Storage.Add(userID, question)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -105,11 +109,12 @@ func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
 	id, err := parseIDFromRequest(w, r)
 	if err != nil {
 		return
 	}
-	err = a.Storage.Delete(id)
+	err = a.Storage.Delete(id, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
