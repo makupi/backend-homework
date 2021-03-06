@@ -5,10 +5,12 @@ import (
 )
 
 type Storage interface {
-	List(lastID, limit int) []models.Question
-	Add(question models.Question) (models.Question, error)
-	Get(id int) (models.Question, error)
-	Update(id int, question models.Question) (models.Question, error)
-	Delete(id int) error
+	List(userID, lastID, limit int) []models.Question
+	Add(userID int, question models.Question) (models.Question, error)
+	Get(id, userID int) (models.Question, error)
+	Update(id, userID int, question models.Question) (models.Question, error)
+	Delete(id, userID int) error
+	CreateUser(username, password string) (models.UserResponse, error)
+	CreateToken(username, password string, secret []byte) (models.JWTTokenResponse, error)
 	UserIDExists(userID int) bool
 }
