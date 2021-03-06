@@ -33,7 +33,7 @@ func (s *SqliteStorage) createTables() error {
 	tables := []string{
 		`CREATE TABLE IF NOT EXISTS "users" (
 			"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-			"username" TEXT,
+			"username" TEXT NOT NULL UNIQUE,
 			"password" TEXT
 		);`,
 		`CREATE TABLE IF NOT EXISTS "questions" (
@@ -202,9 +202,18 @@ func (s *SqliteStorage) Delete(id, userID int) error {
 	return err
 }
 
-func (s *SqliteStorage) CreateUser(username, password string) error {
+func (s *SqliteStorage) CreateUser(username, password string) (models.UserResponse, error) {
+	result, err := s.DB.Exec(`INSERT INTO users (username, password) values (?, ?)`, username, password)
+	if err != nil {
+		return models.UserResponse{}, err
+	}
+	id, err := result.LastInsertId()
+	return models.UserResponse{ID: int(id), Username: username}, nil
+}
 
-	return nil
+func (s *SqliteStorage) CreateToken(username, password string) (string, error) {
+
+	return "", nil
 }
 
 func (s *SqliteStorage) UserIDExists(userID int) bool {

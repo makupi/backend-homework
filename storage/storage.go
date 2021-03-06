@@ -10,7 +10,7 @@ type Storage interface {
 	Get(id, userID int) (models.Question, error)
 	Update(id, userID int, question models.Question) (models.Question, error)
 	Delete(id, userID int) error
-	CreateUser(username, password string) error
-	//CreateToken(username, password string) (string, error)
+	CreateUser(username, password string) (models.UserResponse, error)
+	CreateToken(username, password string) (string, error)
 	UserIDExists(userID int) bool
 }

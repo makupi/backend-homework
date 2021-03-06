@@ -123,7 +123,18 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	response, err := a.Storage.CreateUser(user.Username, user.Password)
+	if err != nil {
+		http.Error(w, "username already in use", http.StatusBadRequest)
+		return
+	}
+	addJSONPayload(w, http.StatusOK, response)
 }
 
 func (a *App) CreateToken(w http.ResponseWriter, r *http.Request) {
