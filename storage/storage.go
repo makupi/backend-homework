@@ -13,4 +13,8 @@ type Storage interface {
 	CreateUser(username, password string) (models.UserResponse, error)
 	CreateToken(username, password string, secret []byte) (models.JWTTokenResponse, error)
 	UserIDExists(userID int) bool
+	HasQuestionAccess(userID, questionID int) bool
+	AddOption(option models.Option, questionID, userID int) (models.Question, error)
+	UpdateOption(option models.Option, optionID, questionID, userID int) (models.Question, error)
+	DeleteOption(optionID, questionID, userID int) (models.Question, error)
 }
