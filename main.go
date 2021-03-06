@@ -237,9 +237,9 @@ func main() {
 	questions.HandleFunc("/{id}", app.GetQuestion).Methods("GET")
 	questions.HandleFunc("/{id}", app.UpdateQuestion).Methods("PUT")
 	questions.HandleFunc("/{id}", app.DeleteQuestion).Methods("DELETE")
-	questions.HandleFunc("/{id}/option", app.AddOption).Methods("POST")
-	questions.HandleFunc("/{id}/option/{optionID}", app.UpdateOption).Methods("PUT")
-	questions.HandleFunc("/{id}/option/{optionID}", app.DeleteOption).Methods("DELETE")
+	questions.HandleFunc("/{id}/options", app.AddOption).Methods("POST")
+	questions.HandleFunc("/{id}/options/{optionID}", app.UpdateOption).Methods("PUT")
+	questions.HandleFunc("/{id}/options/{optionID}", app.DeleteOption).Methods("DELETE")
 
 	users := router.PathPrefix("/users").Subrouter()
 	users.HandleFunc("", app.CreateUser).Methods("POST")
