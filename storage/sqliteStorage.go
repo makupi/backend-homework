@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/makupi/backend-homework/models"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
@@ -107,7 +108,8 @@ func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Ques
 
 	for rows.Next() {
 		var question models.Question
-		if err := rows.Scan(&question.ID, &question.Body); err != nil {
+		var _userID int
+		if err := rows.Scan(&question.ID, &question.Body, &_userID); err != nil {
 			log.Print(err)
 		}
 		question.Options = s.getOptions(question.ID)
@@ -148,7 +150,8 @@ func (s *SqliteStorage) Add(userID int, question models.Question) (models.Questi
 func (s *SqliteStorage) Get(id, userID int) (models.Question, error) {
 	row := s.DB.QueryRow(`SELECT * FROM questions WHERE id == (?) AND user_id == (?)`, id, userID)
 	var question models.Question
-	err := row.Scan(&question.ID, &question.Body)
+	var _userID int
+	err := row.Scan(&question.ID, &question.Body, &_userID)
 	if err != nil {
 		return question, err
 	}
@@ -211,11 +214,31 @@ func (s *SqliteStorage) CreateUser(username, password string) (models.UserRespon
 	return models.UserResponse{ID: int(id), Username: username}, nil
 }
 
-func (s *SqliteStorage) CreateToken(username, password string) (string, error) {
+func (s *SqliteStorage) CreateToken(username, password string, secret []byte) (models.JWTTokenResponse, error) {
+	var jwtToken models.JWTTokenResponse
+	var user models.User
+	row := s.DB.QueryRow(`SELECT * FROM users WHERE username == (?) AND password == (?)`, username, password)
+	err := row.Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		return jwtToken, err
+	}
+	token := jwt.New(jwt.GetSigningMethod("HS256"))
+	(*token).Claims.(jwt.MapClaims)["userID"] = user.ID
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return jwtToken, err
+	}
+	jwtToken.Token = tokenString
 
-	return "", nil
+	return jwtToken, nil
 }
 
 func (s *SqliteStorage) UserIDExists(userID int) bool {
+	row := s.DB.QueryRow(`SELECT * FROM users WHERE id == (?)`, userID)
+	var user models.User
+	err := row.Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		return false
+	}
 	return true
 }

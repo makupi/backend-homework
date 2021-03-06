@@ -138,7 +138,18 @@ func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) CreateToken(w http.ResponseWriter, r *http.Request) {
-
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	token, err := a.Storage.CreateToken(user.Username, user.Password, a.JWTSecret)
+	if err != nil {
+		http.Error(w, "user does not exist or wrong password", http.StatusBadRequest)
+		return
+	}
+	addJSONPayload(w, http.StatusOK, token)
 }
 
 func main() {
