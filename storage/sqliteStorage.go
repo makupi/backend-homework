@@ -31,18 +31,28 @@ func NewSqliteStorage() *SqliteStorage {
 // | id: pkey, int | body: text | correct: bool | question_id: fkey(questions.id), int |
 func (s *SqliteStorage) createTables() error {
 	tables := []string{
+		`CREATE TABLE IF NOT EXISTS "users" (
+			"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			"username" TEXT,
+			"password" TEXT
+		);`,
 		`CREATE TABLE IF NOT EXISTS "questions" (
-		"ID" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		"question" TEXT
+			"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			"question" TEXT,
+			"user_id" INTEGER NOT NULL,
+			CONSTRAINT fk_user_id
+				FOREIGN KEY (user_id)
+				REFERENCES users(id)
+				ON DELETE CASCADE
 		);`,
 		`CREATE TABLE IF NOT EXISTS "options" (
-			"ID" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-			"QUESTION_ID" INTEGER NOT NULL,
-			"OPTION" TEXT,
-			"CORRECT" BOOLEAN,
-			CONSTRAINT fk_questions
-				FOREIGN KEY (QUESTION_ID)
-				REFERENCES questions(ID)
+			"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+			"question_id" INTEGER NOT NULL,
+			"option" TEXT,
+			"correct" BOOLEAN,
+			CONSTRAINT fk_question_id
+				FOREIGN KEY (question_id)
+				REFERENCES questions(id)
 				ON DELETE CASCADE
 		);`,
 	}
@@ -57,7 +67,7 @@ func (s *SqliteStorage) createTables() error {
 }
 
 func (s *SqliteStorage) getOptions(questionID int) (options []models.Option) {
-	rows, err := s.DB.Query(`SELECT * FROM options WHERE QUESTION_ID == (?)`, questionID)
+	rows, err := s.DB.Query(`SELECT * FROM options WHERE question_id == (?)`, questionID)
 	if err != nil {
 		log.Print(err)
 	}
@@ -78,7 +88,7 @@ func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
 	var err error
 	if (lastID != 0) && (limit != 0) {
 		rows, err = s.DB.Query(
-			`SELECT * FROM questions WHERE id < (?) ORDER BY ID DESC LIMIT (?)`,
+			`SELECT * FROM questions WHERE id < (?) ORDER BY id DESC LIMIT (?)`,
 			lastID,
 			limit,
 		)
@@ -108,7 +118,7 @@ func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
 func (s *SqliteStorage) addOptions(options []models.Option, questionID int) error {
 	for _, option := range options {
 		_, err := s.DB.Exec(
-			`INSERT INTO options (QUESTION_ID, OPTION, CORRECT) values (?,?,?)`,
+			`INSERT INTO options (question_id, option, correct) values (?,?,?)`,
 			questionID,
 			option.Body,
 			option.Correct,
@@ -135,7 +145,7 @@ func (s *SqliteStorage) Add(question models.Question) (models.Question, error) {
 }
 
 func (s *SqliteStorage) Get(id int) (models.Question, error) {
-	row := s.DB.QueryRow(`SELECT * FROM questions WHERE ID == (?)`, id)
+	row := s.DB.QueryRow(`SELECT * FROM questions WHERE id == (?)`, id)
 	var question models.Question
 	err := row.Scan(&question.ID, &question.Body)
 	if err != nil {
@@ -146,13 +156,13 @@ func (s *SqliteStorage) Get(id int) (models.Question, error) {
 }
 
 func (s *SqliteStorage) updateQuestion(id int, question models.Question) error {
-	_, err := s.DB.Exec(`UPDATE questions SET question = (?) WHERE ID == (?)`, question.Body, id)
+	_, err := s.DB.Exec(`UPDATE questions SET question = (?) WHERE id == (?)`, question.Body, id)
 	return err
 }
 
 func (s *SqliteStorage) updateOption(option models.Option) error {
 	_, err := s.DB.Exec(
-		`UPDATE options SET OPTION = (?), CORRECT = (?) WHERE ID == (?)`,
+		`UPDATE options SET option = (?), correct = (?) WHERE id == (?)`,
 		option.Body,
 		option.Correct,
 		option.ID,
@@ -187,8 +197,13 @@ func (s *SqliteStorage) Update(id int, question models.Question) (models.Questio
 }
 
 func (s *SqliteStorage) Delete(id int) error {
-	_, err := s.DB.Exec(`DELETE FROM questions WHERE ID == (?)`, id)
+	_, err := s.DB.Exec(`DELETE FROM questions WHERE id == (?)`, id)
 	return err
+}
+
+func (s *SqliteStorage) CreateUser(username, password string) error {
+
+	return nil
 }
 
 func (s *SqliteStorage) UserIDExists(userID int) bool {
