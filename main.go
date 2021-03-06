@@ -13,20 +13,22 @@ import (
 	"time"
 )
 
-// getPort returns the content of the environment variable PORT if set, else 3000
-func getPort() string {
-	if port, ok := os.LookupEnv("PORT"); ok {
-		return port
+// getEnv returns content env if set, fallback if not
+func getEnv(env, fallback string) string {
+	if value, ok := os.LookupEnv(env); ok {
+		return value
 	}
-	return "3000"
+	return fallback
 }
 
 type App struct {
-	Storage storage.Storage
+	Storage   storage.Storage
+	JWTSecret []byte
 }
 
 func (a *App) Initialize() {
 	a.Storage = storage.NewSqliteStorage()
+	a.JWTSecret = []byte(getEnv("JWT_SECRET", "development-secret"))
 }
 
 func addJSONPayload(w http.ResponseWriter, statusCode int, payload interface{}) {
@@ -118,9 +120,10 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 func main() {
 	app := App{}
 	app.Initialize()
+	jwtMiddleware := middlewares.JWTMiddleware{Secret: app.JWTSecret, Storage: app.Storage}
 	router := mux.NewRouter()
+	router.Use(jwtMiddleware.Middleware)
 	router.Use(middlewares.LoggingMiddleware)
-	router.Use(middlewares.JWTMiddleware)
 	router.HandleFunc("/questions", app.ListQuestions).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.GetQuestion).Methods("GET")
 	router.HandleFunc("/questions/{id}", app.UpdateQuestion).Methods("PUT")
@@ -128,10 +131,11 @@ func main() {
 	router.HandleFunc("/questions/{id}", app.DeleteQuestion).Methods("DELETE")
 
 	server := &http.Server{
-		Addr:         "127.0.0.1:" + getPort(),
+		Addr:         "127.0.0.1:" + getEnv("PORT", "3000"),
 		Handler:      router,
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
+	log.Print("Running on " + server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
