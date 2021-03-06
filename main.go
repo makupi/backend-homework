@@ -34,7 +34,7 @@ func addJSONPayload(w http.ResponseWriter, statusCode int, payload interface{}) 
 	w.WriteHeader(statusCode)
 	err := json.NewEncoder(w).Encode(payload)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 }
 

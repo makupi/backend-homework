@@ -59,14 +59,14 @@ func (s *SqliteStorage) createTables() error {
 func (s *SqliteStorage) getOptions(questionID int) (options []models.Option) {
 	rows, err := s.DB.Query(`SELECT * FROM options WHERE QUESTION_ID == (?)`, questionID)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var option models.Option
 		if err := rows.Scan(&option.ID, &option.QuestionID, &option.Body, &option.Correct); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		options = append(options, option)
 	}
@@ -83,12 +83,12 @@ func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
 			limit,
 		)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 	} else {
 		rows, err = s.DB.Query(`SELECT * FROM questions`)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (s *SqliteStorage) List(lastID, limit int) (questions []models.Question) {
 	for rows.Next() {
 		var question models.Question
 		if err := rows.Scan(&question.ID, &question.Body); err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		question.Options = s.getOptions(question.ID)
 		questions = append(questions, question)
