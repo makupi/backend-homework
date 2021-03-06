@@ -1,3 +1,30 @@
+# Notes
+
+## User Authentication
+
+While implementing the JWT authentication bonus requirement I also went ahead and added a simple user and token creation
+endpoint.
+
+- `POST /users` to create a new user
+- `POST /users/token` to create a JWT token for a user
+
+Both endpoints accept the following payload:
+
+```json
+{
+  "username": "username",
+  "password": "password"
+}
+```
+
+## JWT
+
+All `/questions` endpoints require a valid JWT token with the payload `"userID": 123`    
+The secret for JWT can be set through the environment variable `JWT_SECRET` or it will default to `development-secret`
+
+
+----
+
 # Toggl Hire Backend Developer Homework
 
 The goal of this assignment is to see how familiar you are with developing APIs in Go. We tried to pick a task that is
@@ -143,7 +170,7 @@ your own :)
   in [this post](https://web.archive.org/web/20210205081113/https://taylorbrazelton.com/posts/2019/03/offset-vs-seek-pagination/)
   .
   > *Solved with optional query pagination with ?last_id and ?limit*
-- [ ] JWT authentication mechanism
+- [x] JWT authentication mechanism
 
   Clients are required to send a JSON Web Token that identifies the user in some way. The API returns only questions
   that belong to the authenticated user. Endpoint for generating tokens is not needed, we can generate them
