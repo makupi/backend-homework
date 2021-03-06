@@ -105,7 +105,7 @@ func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Ques
 	}
 
 	defer rows.Close()
-
+	questions = []models.Question{}
 	for rows.Next() {
 		var question models.Question
 		var _userID int
