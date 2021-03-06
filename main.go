@@ -173,7 +173,7 @@ func main() {
 	users.HandleFunc("/token", app.CreateToken).Methods("POST")
 
 	server := &http.Server{
-		Addr:         "127.0.0.1:" + getEnv("PORT", "3000"),
+		Addr:         getEnv("HOST", "127.0.0.1") + ":" + getEnv("PORT", "3000"),
 		Handler:      router,
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
