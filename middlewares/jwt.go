@@ -11,12 +11,13 @@ import (
 	"strings"
 )
 
+// JWTMiddleware holds the secret and storage needed for the JWT Middleware
 type JWTMiddleware struct {
 	Secret  []byte
 	Storage storage.Storage
 }
 
-// middleware that checks for a JWT token and verifies if the userID inside exists
+// Middleware that checks for a JWT token and verifies if the userID inside exists
 // "userID" will be set in r.Context
 func (j *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

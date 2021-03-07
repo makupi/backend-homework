@@ -1,13 +1,13 @@
 package models
 
-// JSON representation of questions
+// Question is the JSON representation for questions over the REST API
 type Question struct {
 	ID      int      `json:"id"`
 	Body    string   `json:"body"`
 	Options []Option `json:"options"`
 }
 
-// JSON representation of options
+// Option is the JSON representation for options over the REST API
 type Option struct {
 	ID         int    `json:"id"`
 	Body       string `json:"body"`

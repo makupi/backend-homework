@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/makupi/backend-homework/models"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // driver for sqlite3
 	"log"
 )
 
@@ -14,7 +14,7 @@ type SqliteStorage struct {
 	DB *sql.DB
 }
 
-// Creates a local db.sqlite3 database and automaticlly creates tables
+// NewSqliteStorage Creates a local db.sqlite3 database and automaticlly creates tables
 func NewSqliteStorage() *SqliteStorage {
 	db, err := sql.Open("sqlite3", "./db.sqlite3?_foreign_keys=on")
 	if err != nil {
@@ -28,7 +28,7 @@ func NewSqliteStorage() *SqliteStorage {
 	return &storage
 }
 
-// creates tables questions and options
+// createTables creates tables necessary database tables
 // users:
 // | id: pkey, int | username: text, unique | password: text |
 // questions:
