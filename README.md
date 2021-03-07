@@ -6,6 +6,27 @@ I decided to introduce an ID for both questions and each option to identify them
 On `PUT /questions{id}` the ID of each option **must** be included otherwise it won't be updated. The question ID may be
 omitted as it is taken from the request URI.
 
+## Options Endpoints
+
+In addition to just updating the whole question object I created endpoints to update individual options
+
+- `POST /questions/{id}/options` to add a new option (closes #16)
+- `PUT /questions/{id}/options/{id}` to update an existing option (closes #17)
+- `DELETE /questions/{id}/options/{id}` to delete an existing option (closes #18)
+
+Payload for `POST` and `PUT`
+
+```json
+{
+  "body": "The answer to the question",
+  "correct": true
+}
+```
+
+The full payload needs to be submitted even on update.
+
+JWT Authentication is required to access these endpoints.
+
 ## User Authentication
 
 While implementing the JWT authentication bonus requirement I also went ahead and added a simple user and token creation
