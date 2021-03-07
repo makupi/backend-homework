@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/makupi/backend-homework/models"
 	"github.com/makupi/backend-homework/storage"
 	"log"
 	"net/http"
@@ -31,7 +32,7 @@ func (j *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 			if userID != nil {
 				userID, err := strconv.Atoi(fmt.Sprintf("%v", userID))
 				if err == nil && j.Storage.UserIDExists(userID) {
-					ctx := context.WithValue(r.Context(), "userID", userID)
+					ctx := context.WithValue(r.Context(), models.ContextUserID, userID)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return
 				}

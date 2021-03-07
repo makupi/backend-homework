@@ -17,3 +17,10 @@ type UserResponse struct {
 type JWTTokenResponse struct {
 	Token string `json:"token"`
 }
+
+type key int
+
+const (
+	// ContextUserID is the key used for passing the userID between JWTMiddleware and http handlers
+	ContextUserID key = iota
+)

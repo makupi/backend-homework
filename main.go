@@ -54,7 +54,7 @@ func parseVarFromRequest(w http.ResponseWriter, r *http.Request, key string) (in
 
 // ListQuestions is the handler for GET /questions
 func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	lastID, _ := strconv.Atoi(r.URL.Query().Get("last_id"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	questions := a.Storage.List(userID, lastID, limit)
@@ -63,7 +63,7 @@ func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 
 // GetQuestion is the handler for GET /questions/{id}
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		return
@@ -78,7 +78,7 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 
 // UpdateQuestion is the handler for PUT /questions/{id}
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		return
@@ -99,7 +99,7 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 
 // NewQuestion is the handler for POST /questions
 func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	var question models.Question
 	err := json.NewDecoder(r.Body).Decode(&question)
 	if err != nil {
@@ -116,7 +116,7 @@ func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 
 // DeleteQuestion is the handler for DELETE /questions/{id}
 func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -132,7 +132,7 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 
 // AddOption is the handler for POST /questions/{id}/options
 func (a *App) AddOption(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -153,7 +153,7 @@ func (a *App) AddOption(w http.ResponseWriter, r *http.Request) {
 
 // UpdateOption is the handler for PUT /questions/{id}/options/{id}
 func (a *App) UpdateOption(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -179,7 +179,7 @@ func (a *App) UpdateOption(w http.ResponseWriter, r *http.Request) {
 
 // DeleteOption is the handler for DELETE /questions/{id}/options/{id}
 func (a *App) DeleteOption(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(int)
+	userID := r.Context().Value(models.ContextUserID).(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
