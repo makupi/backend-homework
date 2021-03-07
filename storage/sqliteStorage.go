@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/makupi/backend-homework/models"
 	_ "github.com/mattn/go-sqlite3"
@@ -118,6 +119,23 @@ func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Ques
 	return
 }
 
+func (s *SqliteStorage) AddOption(option models.Option, questionID, userID int) (models.Question, error) {
+	var question models.Question
+	if !s.HasQuestionAccess(userID, questionID) {
+		return question, fmt.Errorf("unauthorized")
+	}
+	_, err := s.DB.Exec(
+		`INSERT INTO options (question_id, option, correct) values (?,?,?)`,
+		questionID,
+		option.Body,
+		option.Correct,
+	)
+	if err != nil {
+		return question, err
+	}
+	return s.Get(questionID, userID)
+}
+
 func (s *SqliteStorage) addOptions(options []models.Option, questionID int) error {
 	for _, option := range options {
 		_, err := s.DB.Exec(
@@ -164,14 +182,22 @@ func (s *SqliteStorage) updateQuestion(id, userID int, question models.Question)
 	return err
 }
 
-func (s *SqliteStorage) updateOption(option models.Option) error {
+func (s *SqliteStorage) UpdateOption(option models.Option, optionID, questionID, userID int) (models.Question, error) {
+	var question models.Question
+	if !s.HasQuestionAccess(userID, questionID) {
+		return question, fmt.Errorf("unauthorized")
+	}
 	_, err := s.DB.Exec(
-		`UPDATE options SET option = (?), correct = (?) WHERE id == (?)`,
+		`UPDATE options SET option = (?), correct = (?) WHERE id == (?) AND question_id == (?)`,
 		option.Body,
 		option.Correct,
-		option.ID,
+		optionID,
+		questionID,
 	)
-	return err
+	if err != nil {
+		return question, err
+	}
+	return s.Get(questionID, userID)
 }
 
 func (s *SqliteStorage) Update(id, userID int, question models.Question) (models.Question, error) {
@@ -189,7 +215,13 @@ func (s *SqliteStorage) Update(id, userID int, question models.Question) (models
 		for _, currentOption := range currentQ.Options {
 			if option.ID == currentOption.ID {
 				if (option.Body != currentOption.Body) || (option.Correct != currentOption.Correct) {
-					err = s.updateOption(option)
+					_, err := s.DB.Exec(
+						`UPDATE options SET option = (?), correct = (?) WHERE id == (?) AND question_id == (?)`,
+						option.Body,
+						option.Correct,
+						option.ID,
+						id,
+					)
 					if err != nil {
 						return models.Question{}, err
 					}
@@ -198,6 +230,18 @@ func (s *SqliteStorage) Update(id, userID int, question models.Question) (models
 		}
 	}
 	return s.Get(id, userID)
+}
+
+func (s *SqliteStorage) DeleteOption(optionID, questionID, userID int) (models.Question, error) {
+	var question models.Question
+	if !s.HasQuestionAccess(userID, questionID) {
+		return question, fmt.Errorf("unauthorized")
+	}
+	_, err := s.DB.Exec(`DELETE FROM options WHERE id == (?) AND question_id == (?)`, optionID, questionID)
+	if err != nil {
+		return question, err
+	}
+	return s.Get(questionID, userID)
 }
 
 func (s *SqliteStorage) Delete(id, userID int) error {
@@ -237,6 +281,16 @@ func (s *SqliteStorage) UserIDExists(userID int) bool {
 	row := s.DB.QueryRow(`SELECT * FROM users WHERE id == (?)`, userID)
 	var user models.User
 	err := row.Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (s *SqliteStorage) HasQuestionAccess(userID, questionID int) bool {
+	row := s.DB.QueryRow(`SELECT questions.id FROM questions WHERE ID == (?) AND user_id == (?)`, questionID, userID)
+	var question models.Question
+	err := row.Scan(&question.ID)
 	if err != nil {
 		return false
 	}

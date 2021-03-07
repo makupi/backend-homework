@@ -40,9 +40,9 @@ func addJSONPayload(w http.ResponseWriter, statusCode int, payload interface{}) 
 	}
 }
 
-func parseIDFromRequest(w http.ResponseWriter, r *http.Request) (int, error) {
+func parseVarFromRequest(w http.ResponseWriter, r *http.Request, key string) (int, error) {
 	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+	id, err := strconv.Atoi(vars[key])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return id, err
@@ -60,7 +60,7 @@ func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
-	id, err := parseIDFromRequest(w, r)
+	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		return
 	}
@@ -74,7 +74,7 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
-	id, err := parseIDFromRequest(w, r)
+	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
 		return
 	}
@@ -110,8 +110,9 @@ func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
-	id, err := parseIDFromRequest(w, r)
+	id, err := parseVarFromRequest(w, r, "id")
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	err = a.Storage.Delete(id, userID)
@@ -120,6 +121,76 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *App) AddOption(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
+	questionID, err := parseVarFromRequest(w, r, "id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var option models.Option
+	err = json.NewDecoder(r.Body).Decode(&option)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	question, err := a.Storage.AddOption(option, questionID, userID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+	addJSONPayload(w, http.StatusOK, question)
+}
+
+func (a *App) UpdateOption(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
+	questionID, err := parseVarFromRequest(w, r, "id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	optionID, err := parseVarFromRequest(w, r, "optionID")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var option models.Option
+	err = json.NewDecoder(r.Body).Decode(&option)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	question, err := a.Storage.UpdateOption(option, optionID, questionID, userID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+	addJSONPayload(w, http.StatusOK, question)
+}
+
+func (a *App) DeleteOption(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(int)
+	questionID, err := parseVarFromRequest(w, r, "id")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	optionID, err := parseVarFromRequest(w, r, "optionID")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var option models.Option
+	err = json.NewDecoder(r.Body).Decode(&option)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	question, err := a.Storage.DeleteOption(optionID, questionID, userID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+	addJSONPayload(w, http.StatusOK, question)
 }
 
 func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +228,6 @@ func main() {
 	app.Initialize()
 	jwtMiddleware := middlewares.JWTMiddleware{Secret: app.JWTSecret, Storage: app.Storage}
 	router := mux.NewRouter()
-	//router.Use(jwtMiddleware.Middleware)
 	router.Use(middlewares.LoggingMiddleware)
 
 	questions := router.PathPrefix("/questions").Subrouter()
@@ -167,6 +237,9 @@ func main() {
 	questions.HandleFunc("/{id}", app.GetQuestion).Methods("GET")
 	questions.HandleFunc("/{id}", app.UpdateQuestion).Methods("PUT")
 	questions.HandleFunc("/{id}", app.DeleteQuestion).Methods("DELETE")
+	questions.HandleFunc("/{id}/options", app.AddOption).Methods("POST")
+	questions.HandleFunc("/{id}/options/{optionID}", app.UpdateOption).Methods("PUT")
+	questions.HandleFunc("/{id}/options/{optionID}", app.DeleteOption).Methods("DELETE")
 
 	users := router.PathPrefix("/users").Subrouter()
 	users.HandleFunc("", app.CreateUser).Methods("POST")
