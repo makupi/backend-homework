@@ -163,11 +163,11 @@ func (s *SqliteStorage) Add(userID int, question models.Question) (models.Questi
 	var q models.Question
 	result, err := s.DB.Exec(`INSERT INTO questions (question, user_id) values (?, ?)`, question.Body, userID)
 	if err != nil {
-		return q, nil
+		return q, err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return q, nil
+		return q, err
 	}
 	err = s.addOptions(question.Options, int(id))
 	return s.Get(int(id), userID)
