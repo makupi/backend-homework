@@ -170,6 +170,9 @@ func (s *SqliteStorage) Add(userID int, question models.Question) (models.Questi
 		return q, err
 	}
 	err = s.addOptions(question.Options, int(id))
+	if err != nil {
+		return q, err
+	}
 	return s.Get(int(id), userID)
 }
 
@@ -274,7 +277,7 @@ func (s *SqliteStorage) CreateUser(username, password string) (models.UserRespon
 		return models.UserResponse{}, err
 	}
 	id, err := result.LastInsertId()
-	return models.UserResponse{ID: int(id), Username: username}, nil
+	return models.UserResponse{ID: int(id), Username: username}, err
 }
 
 // CreateToken creates a new JWT token for the user
