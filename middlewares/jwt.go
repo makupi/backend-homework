@@ -16,6 +16,8 @@ type JWTMiddleware struct {
 	Storage storage.Storage
 }
 
+// middleware that checks for a JWT token and verifies if the userID inside exists
+// "userID" will be set in r.Context
 func (j *JWTMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")

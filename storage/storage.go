@@ -4,6 +4,7 @@ import (
 	"github.com/makupi/backend-homework/models"
 )
 
+// Storage defines an interface with all needed functions for the REST API
 type Storage interface {
 	List(userID, lastID, limit int) []models.Question
 	Add(userID int, question models.Question) (models.Question, error)

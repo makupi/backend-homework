@@ -9,10 +9,12 @@ import (
 	"log"
 )
 
+// SqliteStorage object to access database
 type SqliteStorage struct {
 	DB *sql.DB
 }
 
+// Creates a local db.sqlite3 database and automaticlly creates tables
 func NewSqliteStorage() *SqliteStorage {
 	db, err := sql.Open("sqlite3", "./db.sqlite3?_foreign_keys=on")
 	if err != nil {
@@ -27,8 +29,10 @@ func NewSqliteStorage() *SqliteStorage {
 }
 
 // creates tables questions and options
+// users:
+// | id: pkey, int | username: text, unique | password: text |
 // questions:
-// | id: pkey, int | body: text |
+// | id: pkey, int | body: text | userID: fkey(users.id), int |
 // options:
 // | id: pkey, int | body: text | correct: bool | question_id: fkey(questions.id), int |
 func (s *SqliteStorage) createTables() error {
@@ -85,6 +89,7 @@ func (s *SqliteStorage) getOptions(questionID int) (options []models.Option) {
 	return
 }
 
+// List returns all questions that belong to the userID
 func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Question) {
 	var rows *sql.Rows
 	var err error
@@ -119,6 +124,8 @@ func (s *SqliteStorage) List(userID, lastID, limit int) (questions []models.Ques
 	return
 }
 
+// AddOption adds an Option to an existing question
+// If the question doesn't belong to userID it will result in an error
 func (s *SqliteStorage) AddOption(option models.Option, questionID, userID int) (models.Question, error) {
 	var question models.Question
 	if !s.HasQuestionAccess(userID, questionID) {
@@ -151,6 +158,7 @@ func (s *SqliteStorage) addOptions(options []models.Option, questionID int) erro
 	return nil
 }
 
+// Add a new Question associated to the userID
 func (s *SqliteStorage) Add(userID int, question models.Question) (models.Question, error) {
 	var q models.Question
 	result, err := s.DB.Exec(`INSERT INTO questions (question, user_id) values (?, ?)`, question.Body, userID)
@@ -165,6 +173,7 @@ func (s *SqliteStorage) Add(userID int, question models.Question) (models.Questi
 	return s.Get(int(id), userID)
 }
 
+// Get a question by ID, will only return questions associated to the userID
 func (s *SqliteStorage) Get(id, userID int) (models.Question, error) {
 	row := s.DB.QueryRow(`SELECT * FROM questions WHERE id == (?) AND user_id == (?)`, id, userID)
 	var question models.Question
@@ -182,6 +191,8 @@ func (s *SqliteStorage) updateQuestion(id, userID int, question models.Question)
 	return err
 }
 
+// UpdateOption updates an existing option
+// If the question doesn't belong to userID it will result in an error
 func (s *SqliteStorage) UpdateOption(option models.Option, optionID, questionID, userID int) (models.Question, error) {
 	var question models.Question
 	if !s.HasQuestionAccess(userID, questionID) {
@@ -200,6 +211,8 @@ func (s *SqliteStorage) UpdateOption(option models.Option, optionID, questionID,
 	return s.Get(questionID, userID)
 }
 
+// Update updates an existing question
+// If the question doesn't belong to userID it will result in an error
 func (s *SqliteStorage) Update(id, userID int, question models.Question) (models.Question, error) {
 	currentQ, err := s.Get(id, userID)
 	if err != nil {
@@ -232,6 +245,8 @@ func (s *SqliteStorage) Update(id, userID int, question models.Question) (models
 	return s.Get(id, userID)
 }
 
+// DeleteOption deletes an existing option from a question
+//If the question doesn't belong to userID or it doesn't exist it will result in an error
 func (s *SqliteStorage) DeleteOption(optionID, questionID, userID int) (models.Question, error) {
 	var question models.Question
 	if !s.HasQuestionAccess(userID, questionID) {
@@ -244,11 +259,15 @@ func (s *SqliteStorage) DeleteOption(optionID, questionID, userID int) (models.Q
 	return s.Get(questionID, userID)
 }
 
+// Delete deletes an existing question
+//If the question doesn't belong to userID or it doesn't exist it will result in an error
 func (s *SqliteStorage) Delete(id, userID int) error {
 	_, err := s.DB.Exec(`DELETE FROM questions WHERE id == (?) AND user_id == (?)`, id, userID)
 	return err
 }
 
+// CreateUser creates a new user with username and password
+// If the user already exists it will return an error
 func (s *SqliteStorage) CreateUser(username, password string) (models.UserResponse, error) {
 	result, err := s.DB.Exec(`INSERT INTO users (username, password) values (?, ?)`, username, password)
 	if err != nil {
@@ -258,6 +277,8 @@ func (s *SqliteStorage) CreateUser(username, password string) (models.UserRespon
 	return models.UserResponse{ID: int(id), Username: username}, nil
 }
 
+// CreateToken creates a new JWT token for the user
+// If username and password are incorrect it will result in an error
 func (s *SqliteStorage) CreateToken(username, password string, secret []byte) (models.JWTTokenResponse, error) {
 	var jwtToken models.JWTTokenResponse
 	var user models.User
@@ -277,6 +298,7 @@ func (s *SqliteStorage) CreateToken(username, password string, secret []byte) (m
 	return jwtToken, nil
 }
 
+// UserIDExists checks if a given userID exists
 func (s *SqliteStorage) UserIDExists(userID int) bool {
 	row := s.DB.QueryRow(`SELECT * FROM users WHERE id == (?)`, userID)
 	var user models.User
@@ -287,6 +309,8 @@ func (s *SqliteStorage) UserIDExists(userID int) bool {
 	return true
 }
 
+// HasQuestionAccess verifies that a userID has access to a questionID
+// Returns true if the user has access and false if not
 func (s *SqliteStorage) HasQuestionAccess(userID, questionID int) bool {
 	row := s.DB.QueryRow(`SELECT questions.id FROM questions WHERE ID == (?) AND user_id == (?)`, questionID, userID)
 	var question models.Question

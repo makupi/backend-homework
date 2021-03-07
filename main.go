@@ -21,11 +21,13 @@ func getEnv(env, fallback string) string {
 	return fallback
 }
 
+// App contains the apps storage and JWTSecret
 type App struct {
 	Storage   storage.Storage
 	JWTSecret []byte
 }
 
+// Initialize initializes the app with storage and loads the Secret
 func (a *App) Initialize() {
 	a.Storage = storage.NewSqliteStorage()
 	a.JWTSecret = []byte(getEnv("JWT_SECRET", "development-secret"))
@@ -50,6 +52,7 @@ func parseVarFromRequest(w http.ResponseWriter, r *http.Request, key string) (in
 	return id, nil
 }
 
+// ListQuestions is the handler for GET /questions
 func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	lastID, _ := strconv.Atoi(r.URL.Query().Get("last_id"))
@@ -58,6 +61,7 @@ func (a *App) ListQuestions(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, questions)
 }
 
+// GetQuestion is the handler for GET /questions/{id}
 func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	id, err := parseVarFromRequest(w, r, "id")
@@ -72,6 +76,7 @@ func (a *App) GetQuestion(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// UpdateQuestion is the handler for PUT /questions/{id}
 func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	id, err := parseVarFromRequest(w, r, "id")
@@ -92,6 +97,7 @@ func (a *App) UpdateQuestion(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// NewQuestion is the handler for POST /questions
 func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	var question models.Question
@@ -108,6 +114,7 @@ func (a *App) NewQuestion(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// DeleteQuestion is the handler for DELETE /questions/{id}
 func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	id, err := parseVarFromRequest(w, r, "id")
@@ -123,6 +130,7 @@ func (a *App) DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// AddOption is the handler for POST /questions/{id}/options
 func (a *App) AddOption(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
@@ -143,6 +151,7 @@ func (a *App) AddOption(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// UpdateOption is the handler for PUT /questions/{id}/options/{id}
 func (a *App) UpdateOption(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
@@ -168,6 +177,7 @@ func (a *App) UpdateOption(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// DeleteOption is the handler for DELETE /questions/{id}/options/{id}
 func (a *App) DeleteOption(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	questionID, err := parseVarFromRequest(w, r, "id")
@@ -193,6 +203,7 @@ func (a *App) DeleteOption(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, question)
 }
 
+// CreateUser is the handler for POST /users
 func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -208,6 +219,7 @@ func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	addJSONPayload(w, http.StatusOK, response)
 }
 
+// CreateToken is the handler for POST /users/token
 func (a *App) CreateToken(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
